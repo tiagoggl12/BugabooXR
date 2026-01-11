@@ -6,6 +6,7 @@
         "UnityEditor.TestRunner",
         "Assembly-CSharp",
         "Unity.XR.ARFoundation",
+        "Unity.XR.ARSubsystems",
         "Unity.XR.ARCore",
         "Unity.XR.ARKit",
         "Unity.XR.CoreUtils",

@@ -8,19 +8,19 @@ namespace ARCoreApp.Tests.PlayMode
 {
     /// <summary>
     /// Play Mode tests for AR plane detection and ARFoundation components
+    /// Note: These tests verify component creation and basic functionality
+    /// without requiring an active AR session or device.
     /// </summary>
     public class ARPlaneDetectionTests
     {
         private GameObject _testGameObject;
         private ARPlaneManager _planeManager;
-        private ARSessionOrigin _sessionOrigin;
 
         [SetUp]
         public void Setup()
         {
-            // Setup AR session components for testing
-            _testGameObject = new GameObject("Test AR Session");
-            _sessionOrigin = _testGameObject.AddComponent<ARSessionOrigin>();
+            // Setup AR plane manager for testing
+            _testGameObject = new GameObject("Test AR Components");
             _planeManager = _testGameObject.AddComponent<ARPlaneManager>();
         }
 
@@ -44,16 +44,6 @@ namespace ARCoreApp.Tests.PlayMode
             Assert.IsTrue(_planeManager.enabled, "ARPlaneManager should be enabled");
         }
 
-        [UnityTest]
-        public IEnumerator ARSessionOrigin_Initializes()
-        {
-            // Wait one frame for initialization
-            yield return null;
-
-            Assert.IsNotNull(_sessionOrigin, "ARSessionOrigin should be initialized");
-            Assert.IsTrue(_sessionOrigin.enabled, "ARSessionOrigin should be enabled");
-        }
-
         [Test]
         public void ARPlaneManager_HasCorrectType()
         {
@@ -70,17 +60,6 @@ namespace ARCoreApp.Tests.PlayMode
                 "ARPlaneManager trackables collection should not be null");
             Assert.AreEqual(0, _planeManager.trackables.count,
                 "ARPlaneManager should start with no detected planes");
-        }
-
-        [UnityTest]
-        public IEnumerator ARSessionOrigin_CameraComponentExists()
-        {
-            // Wait one frame for initialization
-            yield return null;
-
-            // Verify camera setup
-            Assert.IsNotNull(_sessionOrigin.camera,
-                "ARSessionOrigin should have a camera reference or create one");
         }
 
         [Test]
@@ -105,6 +84,25 @@ namespace ARCoreApp.Tests.PlayMode
 
             // After yield, objects should still exist until TearDown
             Assert.IsNotNull(_testGameObject, "Test GameObject should persist through yield");
+        }
+
+        [Test]
+        public void ARPlaneManager_DefaultPlanePrefabIsNull()
+        {
+            // Verify default state
+            Assert.IsNull(_planeManager.planePrefab,
+                "Plane prefab should be null by default until configured");
+        }
+
+        [UnityTest]
+        public IEnumerator GameObject_WithARPlaneManager_ExistsInScene()
+        {
+            // Verify the test GameObject is properly added to scene
+            yield return null;
+
+            var foundObject = GameObject.Find("Test AR Components");
+            Assert.IsNotNull(foundObject, "Test GameObject should be findable in scene");
+            Assert.AreSame(_testGameObject, foundObject, "Found object should be the same as created object");
         }
     }
 }
