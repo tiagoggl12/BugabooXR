@@ -175,6 +175,15 @@ jobs:
     needs: [validate, test-editmode, test-playmode]
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.build_type == 'APK' || github.event.inputs.build_type == 'Both'))
     steps:
+      - name: Free Disk Space
+        run: |
+          echo "Freeing up disk space..."
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/.ghcup
+          echo "Disk space freed."
+
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
@@ -253,6 +262,15 @@ jobs:
     needs: [validate, test-editmode, test-playmode]
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.build_type == 'AAB' || github.event.inputs.build_type == 'Both'))
     steps:
+      - name: Free Disk Space
+        run: |
+          echo "Freeing up disk space..."
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/.ghcup
+          echo "Disk space freed."
+
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
