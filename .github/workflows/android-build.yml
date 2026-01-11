@@ -9,7 +9,7 @@ on:
       build_type:
         description: 'Build Type'
         required: true
-        default: 'Both'
+        default: 'APK'
         type: choice
         options:
           - APK
@@ -64,7 +64,7 @@ jobs:
           lfs: true
 
       - name: Cache Unity Library
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: Library
           key: Library-Validation-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
@@ -96,7 +96,7 @@ jobs:
           lfs: true
 
       - name: Cache Unity Library
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: Library
           key: Library-EditMode-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
@@ -138,7 +138,7 @@ jobs:
           lfs: true
 
       - name: Cache Unity Library
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: Library
           key: Library-PlayMode-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
@@ -173,7 +173,10 @@ jobs:
     name: Build Android APK
     runs-on: ubuntu-latest
     needs: [validate, test-editmode, test-playmode]
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.build_type == 'APK' || github.event.inputs.build_type == 'Both'))
+    if: |
+      github.event_name == 'push' || 
+      (github.event_name == 'workflow_dispatch' && 
+       (github.event.inputs.build_type == 'APK' || github.event.inputs.build_type == 'Both'))
     steps:
       - name: Free Disk Space
         run: |
@@ -206,7 +209,7 @@ jobs:
           echo "Building version: ${BUILD_VERSION}"
 
       - name: Cache Unity Library
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: Library
           key: Library-Android-APK-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
@@ -260,7 +263,10 @@ jobs:
     name: Build Android AAB
     runs-on: ubuntu-latest
     needs: [validate, test-editmode, test-playmode]
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.build_type == 'AAB' || github.event.inputs.build_type == 'Both'))
+    if: |
+      github.event_name == 'push' || 
+      (github.event_name == 'workflow_dispatch' && 
+       (github.event.inputs.build_type == 'AAB' || github.event.inputs.build_type == 'Both'))
     steps:
       - name: Free Disk Space
         run: |
@@ -293,7 +299,7 @@ jobs:
           echo "Building version: ${BUILD_VERSION}"
 
       - name: Cache Unity Library
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: Library
           key: Library-Android-AAB-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
@@ -302,7 +308,6 @@ jobs:
             Library-
 
       - name: Decode Android Keystore
-        if: env.ANDROID_KEYSTORE_BASE64 != ''
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
@@ -348,7 +353,11 @@ jobs:
     name: Create GitHub Release
     runs-on: ubuntu-latest
     needs: [build-apk, build-aab]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: |
+      always() &&
+      github.event_name == 'push' && 
+      github.ref == 'refs/heads/main' &&
+      (needs.build-apk.result == 'success' || needs.build-aab.result == 'success')
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -381,7 +390,7 @@ jobs:
           echo "- Commit: ${{ github.sha }}" >> changelog.md
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.BUILD_VERSION }}
           name: Release v${{ steps.version.outputs.BUILD_VERSION }}
