@@ -176,12 +176,12 @@ jobs:
         include:
           # APK build
           - build_type: APK
-            app_bundle: false
+            androidExportType: androidPackage
             condition_check: APK
             retention: 30
           # AAB build
           - build_type: AAB
-            app_bundle: true
+            androidExportType: androidAppBundle
             condition_check: AAB
             retention: 90
     steps:
@@ -255,7 +255,7 @@ jobs:
           unityVersion: ${{ env.UNITY_VERSION }}
           buildName: ${{ env.BUILD_NAME }}
           buildsPath: builds
-          androidAppBundle: ${{ matrix.app_bundle }}
+          androidExportType: ${{ matrix.androidExportType }}
           androidKeystoreName: user.keystore
           androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
