@@ -5,7 +5,6 @@ on: [push, pull_request]
 jobs:
   build:
     name: Build Android APK
-    runs-on: ubuntu-latest
 
     steps:
       # Step 1: Checkout
