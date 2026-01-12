@@ -1,0 +1,16 @@
+# Fastlane Match configuration for BugabooXR
+# https://docs.fastlane.tools/actions/match/
+
+git_url("git@github.com:bugaboostudio/configurador-apple-certs.git")
+
+storage_mode("git")
+
+type("appstore")
+
+app_identifier("com.bugaboostudio.bugabooxr")
+
+team_id(ENV["APPLE_TEAM_ID"])
+
+# Keychain for CI
+keychain_name(ENV["MATCH_KEYCHAIN_NAME"] || "login.keychain")
+keychain_password(ENV["MATCH_KEYCHAIN_PASSWORD"] || "")

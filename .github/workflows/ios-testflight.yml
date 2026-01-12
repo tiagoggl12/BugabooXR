@@ -58,21 +58,27 @@ jobs:
           fi
           fastlane --version
 
-      # Step 3: Setup provisioning profiles e certificates
-      - name: 🔐 Setup signing
+      # Step 3: Setup provisioning profiles e certificates using Match
+      - name: 🔐 Setup signing with Match
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_TOKEN }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          echo "Setting up signing certificates..."
+          echo "Setting up signing certificates with Match..."
           # Configurar keychain temporário
           security create-keychain -p "" build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p "" build.keychain
           security set-keychain-settings -t 3600 -u build.keychain
+          security list-keychains -d user -s build.keychain login.keychain
+
+          # Instalar certificados usando Match
+          cd fastlane
+          fastlane setup_certs
 
       # Step 4: Build IPA com xcodebuild
       - name: 📦 Archive and Export IPA

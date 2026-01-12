@@ -1,0 +1,12 @@
+# Fastlane Appfile for BugabooXR
+# https://docs.fastlane.tools/advanced/Appfile/
+
+app_identifier("com.bugaboostudio.bugabooxr")
+
+team_id(ENV["APPLE_TEAM_ID"])
+
+# For App Store Connect API authentication
+# These values come from environment variables (GitHub Secrets)
+# - APP_STORE_CONNECT_API_KEY_ID
+# - APP_STORE_CONNECT_API_ISSUER_ID
+# - APP_STORE_CONNECT_API_KEY
