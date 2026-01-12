@@ -184,9 +184,6 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Fetch the xcode-project branch (create if doesn't exist)
-          git fetch origin xcode-project:xcode-project || git checkout --orphan xcode-project
-
           # Create a temporary directory for the new content
           TEMP_DIR=$(mktemp -d)
 
@@ -195,8 +192,11 @@ jobs:
             cp -r build/iOS/* "$TEMP_DIR/" || echo "No iOS build found"
           fi
 
-          # Switch to xcode-project branch
-          git checkout xcode-project 2>/dev/null || git checkout --orphan xcode-project
+          # Delete local xcode-project branch if it exists (to avoid conflicts)
+          git branch -D xcode-project 2>/dev/null || true
+
+          # Fetch and checkout xcode-project branch (or create orphan if doesn't exist on remote)
+          git fetch origin xcode-project && git checkout -b xcode-project origin/xcode-project || git checkout --orphan xcode-project
 
           # Remove all existing content except .git directory
           find . -maxdepth 1 ! -name '.git' ! -name '.' ! -name '..' -exec rm -rf {} + 2>/dev/null || true
@@ -218,4 +218,4 @@ jobs:
           # Push to xcode-project branch
           git push origin xcode-project --force
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
