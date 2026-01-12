@@ -64,57 +64,104 @@ jobs:
             echo "Unity Hub not found at default location"
           fi
 
+      # Step 3.5: Find Unity path
+      - name: 🔍 Detect Unity installation
+        id: unity
+        run: |
+          # Procurar por instalações do Unity
+          UNITY_BASE="/Applications/Unity/Hub/Editor"
+
+          if [ -d "$UNITY_BASE" ]; then
+            # Pegar a primeira versão encontrada
+            UNITY_VERSION=$(ls -1 "$UNITY_BASE" | grep -v "^\\." | head -n1)
+
+            if [ -n "$UNITY_VERSION" ]; then
+              UNITY_PATH="$UNITY_BASE/$UNITY_VERSION/Unity.app/Contents/MacOS/Unity"
+
+              if [ -f "$UNITY_PATH" ]; then
+                echo "✅ Unity encontrado: $UNITY_VERSION"
+                echo "path=$UNITY_PATH" >> $GITHUB_OUTPUT
+                echo "found=true" >> $GITHUB_OUTPUT
+                echo "version=$UNITY_VERSION" >> $GITHUB_OUTPUT
+                exit 0
+              fi
+            fi
+          fi
+
+          echo "❌ Unity não encontrado!"
+          echo "found=false" >> $GITHUB_OUTPUT
+          exit 1
+
       # Step 4: Build iOS (if selected)
       - name: 🍎 Build iOS Xcode project
-        if: github.event.inputs.platform == 'iOS' || github.event.inputs.platform == 'Both'
+        if: (github.event.inputs.platform == 'iOS' || github.event.inputs.platform == 'Both') && steps.unity.outputs.found == 'true'
         run: |
-          echo "Building iOS project..."
-          # Ajuste o caminho do Unity conforme sua instalação
-          UNITY_PATH="/Applications/Unity/Hub/Editor/*/Unity.app/Contents/MacOS/Unity"
-          UNITY_PATH=$(echo $UNITY_PATH)
+          echo "🔨 Building iOS project with Unity ${{ steps.unity.outputs.version }}..."
 
-          if [ -f "$UNITY_PATH" ]; then
-            "$UNITY_PATH" \
-              -quit \
-              -batchmode \
-              -nographics \
-              -silent-crashes \
-              -logFile "$(pwd)/build-ios.log" \
-              -projectPath "$(pwd)" \
-              -buildTarget iOS \
-              -executeMethod BuildCommand.PerformBuild || true
+          # Limpar build anterior
+          rm -rf build/iOS
 
-            echo "📄 Build log:"
-            cat build-ios.log || echo "No log file found"
+          "${{ steps.unity.outputs.path }}" \
+            -quit \
+            -batchmode \
+            -nographics \
+            -silent-crashes \
+            -logFile "$(pwd)/build-ios.log" \
+            -projectPath "$(pwd)" \
+            -buildTarget iOS \
+            -executeMethod BuildCommand.PerformBuild || {
+              echo "⚠️  Build command failed, checking log..."
+              cat build-ios.log
+              exit 1
+            }
+
+          echo ""
+          echo "📄 Build log (últimas 50 linhas):"
+          tail -n 50 build-ios.log || echo "No log file found"
+
+          echo ""
+          if [ -d "build/iOS" ]; then
+            echo "✅ iOS build created successfully!"
+            ls -lah build/iOS
           else
-            echo "⚠️  Unity not found. Please install Unity or adjust the UNITY_PATH"
-            echo "Skipping iOS build..."
+            echo "❌ iOS build directory not found!"
+            exit 1
           fi
 
       # Step 5: Build Android (if selected)
       - name: 🤖 Build Android APK
-        if: github.event.inputs.platform == 'Android' || github.event.inputs.platform == 'Both'
+        if: (github.event.inputs.platform == 'Android' || github.event.inputs.platform == 'Both') && steps.unity.outputs.found == 'true'
         run: |
-          echo "Building Android project..."
-          UNITY_PATH="/Applications/Unity/Hub/Editor/*/Unity.app/Contents/MacOS/Unity"
-          UNITY_PATH=$(echo $UNITY_PATH)
+          echo "🔨 Building Android project with Unity ${{ steps.unity.outputs.version }}..."
 
-          if [ -f "$UNITY_PATH" ]; then
-            "$UNITY_PATH" \
-              -quit \
-              -batchmode \
-              -nographics \
-              -silent-crashes \
-              -logFile "$(pwd)/build-android.log" \
-              -projectPath "$(pwd)" \
-              -buildTarget Android \
-              -executeMethod BuildCommand.PerformBuild || true
+          # Limpar build anterior
+          rm -rf build/Android
 
-            echo "📄 Build log:"
-            cat build-android.log || echo "No log file found"
+          "${{ steps.unity.outputs.path }}" \
+            -quit \
+            -batchmode \
+            -nographics \
+            -silent-crashes \
+            -logFile "$(pwd)/build-android.log" \
+            -projectPath "$(pwd)" \
+            -buildTarget Android \
+            -executeMethod BuildCommand.PerformBuild || {
+              echo "⚠️  Build command failed, checking log..."
+              cat build-android.log
+              exit 1
+            }
+
+          echo ""
+          echo "📄 Build log (últimas 50 linhas):"
+          tail -n 50 build-android.log || echo "No log file found"
+
+          echo ""
+          if [ -d "build/Android" ]; then
+            echo "✅ Android build created successfully!"
+            ls -lah build/Android
           else
-            echo "⚠️  Unity not found. Please install Unity or adjust the UNITY_PATH"
-            echo "Skipping Android build..."
+            echo "❌ Android build directory not found!"
+            exit 1
           fi
 
       # Step 6: Upload artifacts (optional)
