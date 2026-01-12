@@ -7,14 +7,30 @@ jobs:
     name: Build Android APK
     runs-on: ubuntu-latest
     steps:
-      # Step 0: Free up disk space
+      # Step 0: Check disk space
+      - name: 💽 Check initial disk space
+        run: |
+          echo "=== Disk space BEFORE cleanup ==="
+          df -h
+          echo ""
+          echo "=== Largest directories ==="
+          sudo du -h --max-depth=1 /usr 2>/dev/null | sort -hr | head -10
+
+      # Step 1: Free up disk space
       - name: 🧹 Free up disk space
         run: |
+          echo "Removing .NET SDK..."
           sudo rm -rf /usr/share/dotnet
+          echo "Removing Android SDK..."
           sudo rm -rf /usr/local/lib/android
+          echo "Removing GHC/Haskell..."
           sudo rm -rf /opt/ghc
+          echo "Removing CodeQL..."
           sudo rm -rf /opt/hostedtoolcache/CodeQL
+          echo "Cleaning Docker images..."
           sudo docker image prune --all --force
+          echo ""
+          echo "=== Disk space AFTER cleanup ==="
           df -h
 
       # Step 1: Checkout
