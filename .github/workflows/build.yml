@@ -184,24 +184,27 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Fetch the xcode-project branch
-          git fetch origin xcode-project || git checkout --orphan xcode-project
+          # Fetch the xcode-project branch (create if doesn't exist)
+          git fetch origin xcode-project:xcode-project || git checkout --orphan xcode-project
 
           # Create a temporary directory for the new content
           TEMP_DIR=$(mktemp -d)
 
           # Copy the iOS build to temp directory
-          cp -r build/iOS/* "$TEMP_DIR/"
+          if [ -d "build/iOS" ]; then
+            cp -r build/iOS/* "$TEMP_DIR/" || echo "No iOS build found"
+          fi
 
           # Switch to xcode-project branch
-          git checkout xcode-project || git checkout --orphan xcode-project
+          git checkout xcode-project 2>/dev/null || git checkout --orphan xcode-project
 
-          # Remove all existing content
-          git rm -rf . || true
-          rm -rf * .* 2>/dev/null || true
+          # Remove all existing content except .git directory
+          find . -maxdepth 1 ! -name '.git' ! -name '.' ! -name '..' -exec rm -rf {} + 2>/dev/null || true
 
           # Copy the new build content
-          cp -r "$TEMP_DIR"/* .
+          if [ "$(ls -A $TEMP_DIR)" ]; then
+            cp -r "$TEMP_DIR"/* . || echo "No files to copy"
+          fi
 
           # Add all files
           git add -A
@@ -210,7 +213,7 @@ jobs:
           SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
           git commit -m "iOS Build from commit ${SHORT_SHA}" \
                      -m "Source commit: ${{ github.sha }}" \
-                     -m "Build date: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || true
+                     -m "Build date: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || echo "No changes to commit"
 
           # Push to xcode-project branch
           git push origin xcode-project --force
